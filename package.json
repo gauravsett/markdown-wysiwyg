@@ -1,0 +1,184 @@
+{
+  "name": "markdown-wysiwyg",
+  "displayName": "Markdown WYSIWYG",
+  "description": "WYSIWYG-like markdown editing using decorations — hides syntax on inactive lines, reveals on cursor line",
+  "version": "0.1.0",
+  "publisher": "gauravsett",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Markdown WYSIWYG",
+      "properties": {
+        "markdown-wysiwyg.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable WYSIWYG markdown decorations"
+        },
+        "markdown-wysiwyg.headings.scaleFontSize": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scale heading font sizes (H1 largest, H6 smallest)"
+        },
+        "markdown-wysiwyg.headings.fontSizeScale": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6,
+          "default": [
+            1.2,
+            1.1,
+            1,
+            0.9,
+            0.8,
+            0.7
+          ],
+          "description": "Font size multipliers for H1–H6 relative to editor.fontSize (only used when scaleFontSize is true)"
+        },
+        "markdown-wysiwyg.headings.colorize": {
+          "type": "boolean",
+          "default": true,
+          "description": "Apply distinct colors to different heading levels"
+        },
+        "markdown-wysiwyg.math.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Render inline LaTeX math ($...$) as formatted equations"
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "markdownWysiwyg.heading1",
+        "description": "Color for H1 headings",
+        "defaults": {
+          "dark": "#E06C75",
+          "light": "#C53030",
+          "highContrast": "#FF6B6B"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.heading2",
+        "description": "Color for H2 headings",
+        "defaults": {
+          "dark": "#61AFEF",
+          "light": "#2B6CB0",
+          "highContrast": "#63B3ED"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.heading3",
+        "description": "Color for H3 headings",
+        "defaults": {
+          "dark": "#C678DD",
+          "light": "#805AD5",
+          "highContrast": "#D6BCFA"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.heading4",
+        "description": "Color for H4 headings",
+        "defaults": {
+          "dark": "#E5C07B",
+          "light": "#B7791F",
+          "highContrast": "#FAF089"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.heading5",
+        "description": "Color for H5 headings",
+        "defaults": {
+          "dark": "#98C379",
+          "light": "#38A169",
+          "highContrast": "#9AE6B4"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.heading6",
+        "description": "Color for H6 headings",
+        "defaults": {
+          "dark": "#56B6C2",
+          "light": "#319795",
+          "highContrast": "#76E4F7"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.inlineCodeBackground",
+        "description": "Background color for inline code",
+        "defaults": {
+          "dark": "rgba(128,128,128,0.15)",
+          "light": "rgba(128,128,128,0.12)",
+          "highContrast": "rgba(128,128,128,0.2)"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.codeBlockBackground",
+        "description": "Background color for code blocks",
+        "defaults": {
+          "dark": "rgba(128,128,128,0.1)",
+          "light": "rgba(128,128,128,0.08)",
+          "highContrast": "rgba(128,128,128,0.15)"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.blockquoteBar",
+        "description": "Color for blockquote left bar",
+        "defaults": {
+          "dark": "rgba(128,128,128,0.5)",
+          "light": "rgba(100,100,100,0.4)",
+          "highContrast": "rgba(200,200,200,0.6)"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.tableHeaderBackground",
+        "description": "Background color for table header row",
+        "defaults": {
+          "dark": "rgba(128,128,128,0.15)",
+          "light": "rgba(128,128,128,0.12)",
+          "highContrast": "rgba(128,128,128,0.2)"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.tableRowOddBackground",
+        "description": "Background color for odd table data rows",
+        "defaults": {
+          "dark": "rgba(128,128,128,0.06)",
+          "light": "rgba(128,128,128,0.05)",
+          "highContrast": "rgba(128,128,128,0.1)"
+        }
+      },
+      {
+        "id": "markdownWysiwyg.tableRowEvenBackground",
+        "description": "Background color for even table data rows",
+        "defaults": {
+          "dark": "rgba(128,128,128,0.02)",
+          "light": "rgba(128,128,128,0.01)",
+          "highContrast": "rgba(128,128,128,0.04)"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "mathjax-full": "^3.2.1"
+  }
+}
