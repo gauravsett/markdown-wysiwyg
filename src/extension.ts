@@ -146,8 +146,7 @@ function deactivateAll(): void {
 function readHeadingOptions(config: vscode.WorkspaceConfiguration): HeadingStyleOptions {
   return {
     scaleFontSize: config.get<boolean>('headings.scaleFontSize', true),
-    fontSizeMultipliers: config.get<number[]>('headings.fontSizeScale', [1.4, 1.2, 1.0, 0.9, 0.8, 0.7]),
-    colorize: config.get<boolean>('headings.colorize', true),
+    fontSizeMultipliers: config.get<number[]>('headings.fontSizeScale', [1.4, 1.2, 1.0, 1.0, 1.0, 1.0]),
   };
 }
 

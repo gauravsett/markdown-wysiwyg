@@ -1,81 +1,71 @@
-# Heading Level 1
+# Markdown WYSIWYG Test Document
 
-## Heading Level 2
+This file exercises every markdown construct supported by the extension.
+Use it to verify that syntax hiding and revealing works correctly.
 
-### Heading Level 3
-This is **bold text** and this is *italic text* and this is ***bold and italic***.
+## Headings
 
-#### Heading Level 4
+### Third-level heading
 
-##### Heading Level 5
+#### Fourth-level heading
 
-###### Heading Level 6
+##### Fifth-level heading
+
+###### Sixth-level heading
 
 ## Text Formatting
 
-The research study is being conducted to examine strategic options available to the United States for defending against foreign AI-powered threats to national security. You are being invited to participate because of your subject-matter expertise in a domain relevant to this research, such as cybersecurity, biosecurity, nuclear security, information operations, or defense strategy.
+This is **bold text** and this is _italic text_ and this is **_bold italic_**.
 
-This is **bold text** and this is *italic text* and this is ***bold and italic***.
+You can also use __bold with underscores__ and *italic with asterisks*.
 
-You can also use __bold__ and _italic_ with underscores.
+Here is ***triple-asterisk bold italic*** for completeness.
 
 Here is some ~~strikethrough text~~ for deletions.
 
-Here is `inline code` in a sentence, and ``double backtick code`` too.
+Here is `inline code` in a sentence, and ``double backtick `code` `` too.
 
-## Tables
-| Cited in | Work                                                                                                                | Primary Relevance  |
-| -------- | ------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| ~16 | Michael Mazarr et al., *What Deters and Why* series (RAND, 2018-2020) + *Understanding Deterrence* (2018) | All three          |
-| ~13      | Robert Jervis, "Deterrence and Perception" (1983) + *Perception and Misperception in International Politics* (1976) | Punishment, Denial |
-| ~12      | Thomas Schelling, *Arms and Influence* (1966) + *The Strategy of Conflict* (1960)                                   | Punishment         |
-| ~11      | Herman Kahn, *On Thermonuclear War* (1960) + *On Escalation* (1965)                                                 | Punishment, Denial |
-| ~10      | Glenn Snyder, *Deterrence by Denial and Punishment* (1959) + *Deterrence and Defense* (1961)                        | Punishment, Denial |
+Here is an inline math expression: $E = mc^2$.
 
-| a | b | b  | b  | bb |
-|---|---|----|----|----|
-| v | b | bb | b  | b  |
-| b | b | b  | bb | b  |
-| b | b | bb | v  | b  |
+And a longer one: $\int_0^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$.
 
 ## Links
 
-Check out [Google](https://www.google.com) for more info.
+Visit [Example](https://example.com) for more info.
 
-Here is [another link](https://example.com/some/path?query=value) with a longer URL.
+Here is a [link with a longer URL](https://example.com/path/to/page?query=value&sort=asc).
 
 ## Lists
 
+### Unordered lists
+
 - First item
 - Second item
-- Third item
   - Nested item
-  - Another nested item
-
 * Star bullet
-* Another star bullet
-
 + Plus bullet
 
+### Ordered lists
+
 1. First numbered item
+  1. Nested numbered item
 2. Second numbered item
-3. Third numbered item
-   1. Nested numbered item
-   2. Another nested numbered item
 
 ## Blockquotes
 
-> This is a blockquote.
-> It can span multiple lines.
+> This is a single-line blockquote.
 
-> Another separate blockquote here.
+> This is a multi-line blockquote.
+> It spans two lines.
+
+> A blockquote with **bold text** and _italic text_ inside it.
 
 ## Code Blocks
 
 ```javascript
-function hello() {
-  console.log("Hello, world!");
-  return 42;
+function greet(name) {
+  console.log(`Hello, ${name}!`);
+  return true;
 }
 ```
 
@@ -83,8 +73,18 @@ function hello() {
 def fibonacci(n):
     if n <= 1:
         return n
-    return fibonacci(n-1) + fibonacci(n-2)
+    return fibonacci(n - 1) + fibonacci(n - 2)
 ```
+
+## Tables
+
+| Name    | Type   | Default | Description              |
+| ------- | ------ | ------- | ------------------------ |
+| enabled | bool   | true    | Enable the feature       |
+| count   | int    | 10      | Number of items to fetch |
+| label   | string | ""      | Display label            |
+| verbose | bool   | false   | Show detailed output including debug information |
+| timeout | int    | 30      | Timeout in seconds       |
 
 ## Horizontal Rules
 
@@ -96,14 +96,9 @@ ___
 
 ## Mixed Content
 
-Here is a paragraph with **bold**, *italic*, `code`, and a [link](https://example.com) all in one line.
+Here is a paragraph with **bold**, _italic_, `code`, ~~deleted~~, and a [link](https://example.com) all in one line.
 
-> A blockquote with **bold text** and *italic text* inside it.
+> A blockquote with `inline code` and a [link](https://example.com).
 
-- A list item with `inline code` and a [link](https://example.com)
-
-## Inline Math
-
-Here is an inline math expression: $E=mc^2$.
-
-And here is another one j: $\int_0^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$.
+- A list item with **bold**, _italic_, and `code` together.
+- Another item with a [link](https://example.com) and ~~strikethrough~~.

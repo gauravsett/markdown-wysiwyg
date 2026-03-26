@@ -12,6 +12,7 @@ export type DecorationRangeType =
   | 'codeBlock'
   | 'horizontalRule'
   | 'listBullet'
+  | 'listNumber'
   | 'mathInline'
   | 'tableHeader'
   | 'tableAlignmentRow'
@@ -24,6 +25,7 @@ export interface DecorationRange {
   syntaxRanges: vscode.Range[];
   level?: number;
   pipePaddings?: number[];
+  tableWidth?: number;
 }
 
 /**
@@ -179,7 +181,18 @@ export function parseDocument(document: vscode.TextDocument): DecorationRange[] 
       ranges.push({
         type: 'listBullet',
         contentRange: new vscode.Range(lineIdx, bulletPos + 2, lineIdx, line.length),
-        syntaxRanges: [new vscode.Range(lineIdx, bulletPos, lineIdx, bulletPos + 1)],
+        syntaxRanges: [new vscode.Range(lineIdx, bulletPos, lineIdx, bulletPos + 2)],
+      });
+    }
+
+    // --- Ordered list numbers (1. or 1)) ---
+    const orderedMatch = line.match(/^(\s*)(\d+[.)]\s)/);
+    if (orderedMatch) {
+      const prefixEnd = orderedMatch[1].length + orderedMatch[2].length;
+      ranges.push({
+        type: 'listNumber',
+        contentRange: new vscode.Range(lineIdx, prefixEnd, lineIdx, line.length),
+        syntaxRanges: [new vscode.Range(lineIdx, orderedMatch[1].length, lineIdx, prefixEnd)],
       });
     }
 
@@ -256,6 +269,17 @@ function computeTablePadding(ranges: DecorationRange[], lines: string[]): void {
 
   // For each table, compute max effective cell widths and assign pipePaddings
   for (const table of tables) {
+    // Store the max line length across all rows for the alignment row separator
+    const alignmentRow = table.find((r) => r.type === 'tableAlignmentRow');
+    if (alignmentRow) {
+      let maxLength = 0;
+      for (const r of table) {
+        const len = lines[r.contentRange.start.line].length;
+        if (len > maxLength) { maxLength = len; }
+      }
+      alignmentRow.tableWidth = maxLength;
+    }
+
     // Collect pipe positions per row (skip alignment row — it uses line-through, not pipes)
     const dataRows = table.filter((r) => r.type !== 'tableAlignmentRow');
     if (dataRows.length === 0) { continue; }
@@ -329,7 +353,7 @@ function parseInlineFormatting(line: string, lineIdx: number, ranges: Decoration
     return matched.some(([s, e]) => start < e && end > s);
   }
 
-  // --- Bold + Italic (***text*** or ___text___) ---
+  // --- Bold + Italic (***text***, ___text___, **_text_**, __*text*__, _**text**_, *__text__*) ---
   const boldItalicRegex = /(\*{3}|_{3})(?!\s)(.+?)(?<!\s)\1/g;
   let match: RegExpExecArray | null;
 
@@ -353,6 +377,30 @@ function parseInlineFormatting(line: string, lineIdx: number, ranges: Decoration
       });
     }
     match = boldItalicRegex.exec(line);
+  }
+
+  // Mixed-marker bold+italic: **_text_**, __*text*__, _**text**_, *__text__*
+  const mixedBoldItalicRegex = /(\*{2}_|_{2}\*|_\*{2}|\*_{2})(?!\s)(.+?)(?<!\s)(?:\*{2}_|_{2}\*|_\*{2}|\*_{2})/g;
+  match = mixedBoldItalicRegex.exec(line);
+  while (match !== null) {
+    const fullStart = match.index;
+    const markerLen = 3;
+    const contentStart = fullStart + markerLen;
+    const contentEnd = contentStart + match[2].length;
+    const fullEnd = contentEnd + markerLen;
+
+    if (!isAlreadyMatched(fullStart, fullEnd)) {
+      matched.push([fullStart, fullEnd]);
+      ranges.push({
+        type: 'boldItalic',
+        contentRange: new vscode.Range(lineIdx, contentStart, lineIdx, contentEnd),
+        syntaxRanges: [
+          new vscode.Range(lineIdx, fullStart, lineIdx, contentStart),
+          new vscode.Range(lineIdx, contentEnd, lineIdx, fullEnd),
+        ],
+      });
+    }
+    match = mixedBoldItalicRegex.exec(line);
   }
 
   // --- Bold (**text** or __text__) ---

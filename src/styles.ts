@@ -2,12 +2,17 @@ import * as vscode from 'vscode';
 
 export interface DecorationTypes {
   hiddenSyntax: vscode.TextEditorDecorationType;
+  proseFont: vscode.TextEditorDecorationType;
   bold: vscode.TextEditorDecorationType;
   italic: vscode.TextEditorDecorationType;
   boldItalic: vscode.TextEditorDecorationType;
+  proseBold: vscode.TextEditorDecorationType;
+  proseItalic: vscode.TextEditorDecorationType;
+  proseBoldItalic: vscode.TextEditorDecorationType;
   strikethrough: vscode.TextEditorDecorationType;
   inlineCode: vscode.TextEditorDecorationType;
   linkText: vscode.TextEditorDecorationType;
+  headingSyntax: vscode.TextEditorDecorationType;
   heading1: vscode.TextEditorDecorationType;
   heading2: vscode.TextEditorDecorationType;
   heading3: vscode.TextEditorDecorationType;
@@ -23,6 +28,7 @@ export interface DecorationTypes {
   blockquoteContent: vscode.TextEditorDecorationType;
   blockquoteMarker: vscode.TextEditorDecorationType;
   listBullet: vscode.TextEditorDecorationType;
+  listNumber: vscode.TextEditorDecorationType;
   horizontalRule: vscode.TextEditorDecorationType;
   codeBlock: vscode.TextEditorDecorationType;
   codeBlockFence: vscode.TextEditorDecorationType;
@@ -38,17 +44,7 @@ export interface DecorationTypes {
 export interface HeadingStyleOptions {
   scaleFontSize?: boolean;
   fontSizeMultipliers: number[];
-  colorize?: boolean;
 }
-
-const HEADING_COLOR_VARS = [
-  'var(--vscode-markdownWysiwyg-heading1)',
-  'var(--vscode-markdownWysiwyg-heading2)',
-  'var(--vscode-markdownWysiwyg-heading3)',
-  'var(--vscode-markdownWysiwyg-heading4)',
-  'var(--vscode-markdownWysiwyg-heading5)',
-  'var(--vscode-markdownWysiwyg-heading6)',
-];
 
 function createNoOpDecorationType(): vscode.TextEditorDecorationType {
   return vscode.window.createTextEditorDecorationType({});
@@ -58,27 +54,18 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
   const {
     scaleFontSize = true,
     fontSizeMultipliers,
-    colorize = true,
   } = options;
   const baseFontSize = vscode.workspace.getConfiguration('editor').get<number>('fontSize', 14);
+  const proseFontFamily = vscode.workspace.getConfiguration('markdown-wysiwyg').get<string>('fontFamily', 'system-ui, -apple-system, sans-serif');
 
   function headingTextDecoration(depth: number): vscode.TextEditorDecorationType {
-    const css: string[] = [];
+    if (!scaleFontSize) { return createNoOpDecorationType(); }
 
-    if (scaleFontSize) {
-      const multiplier = fontSizeMultipliers[depth - 1] ?? 1.0;
-      const size = Math.round(baseFontSize * multiplier);
-      css.push(`font-size: ${size}px`);
-    }
-
-    if (colorize) {
-      css.push(`color: ${HEADING_COLOR_VARS[depth - 1]} !important`);
-    }
-
-    if (css.length === 0) { return createNoOpDecorationType(); }
+    const multiplier = fontSizeMultipliers[depth - 1] ?? 1.0;
+    const size = Math.round(baseFontSize * multiplier);
 
     return vscode.window.createTextEditorDecorationType({
-      textDecoration: `; ${css.join('; ')};`,
+      textDecoration: `; font-size: ${size}px; font-weight: bold;`,
     });
   }
 
@@ -86,6 +73,10 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
     hiddenSyntax: vscode.window.createTextEditorDecorationType({
       color: 'transparent',
       letterSpacing: '-0.55em; font-size: 0.001em',
+    }),
+
+    proseFont: vscode.window.createTextEditorDecorationType({
+      textDecoration: `; font-family: ${proseFontFamily};`,
     }),
 
     bold: vscode.window.createTextEditorDecorationType({
@@ -99,6 +90,18 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
     boldItalic: vscode.window.createTextEditorDecorationType({
       fontWeight: 'bold',
       fontStyle: 'italic',
+    }),
+
+    proseBold: vscode.window.createTextEditorDecorationType({
+      textDecoration: `; font-family: ${proseFontFamily}; font-weight: bold;`,
+    }),
+
+    proseItalic: vscode.window.createTextEditorDecorationType({
+      textDecoration: `; font-family: ${proseFontFamily}; font-style: italic;`,
+    }),
+
+    proseBoldItalic: vscode.window.createTextEditorDecorationType({
+      textDecoration: `; font-family: ${proseFontFamily}; font-weight: bold; font-style: italic;`,
     }),
 
     strikethrough: vscode.window.createTextEditorDecorationType({
@@ -115,50 +118,39 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
       textDecoration: 'underline',
     }),
 
-    // Headings: use before pseudo-elements (separate DOM nodes, not subject to
-    // semantic token color overrides) and backgroundColor (also unaffected).
-    // font-size/color CSS injection via letterSpacing is reset by VS Code's
-    // layout engine (Issue #9078) and color is overridden by token colors.
+    headingSyntax: vscode.window.createTextEditorDecorationType({
+      color: 'transparent',
+      letterSpacing: '-0.55em; font-size: 0.001em',
+    }),
+
     heading1: vscode.window.createTextEditorDecorationType({
-      fontWeight: 'bold',
-      backgroundColor: 'rgba(224, 108, 117, 0.12)',
+      textDecoration: '; font-weight: bold;',
       isWholeLine: true,
-      before: { contentText: '\u2503', color: '#E06C75', margin: '0 0.4em 0 0' },
     }),
 
     heading2: vscode.window.createTextEditorDecorationType({
-      fontWeight: 'bold',
-      backgroundColor: 'rgba(97, 175, 239, 0.12)',
+      textDecoration: '; font-weight: bold;',
       isWholeLine: true,
-      before: { contentText: '\u2503', color: '#61AFEF', margin: '0 0.4em 0 0' },
     }),
 
     heading3: vscode.window.createTextEditorDecorationType({
-      fontWeight: 'bold',
-      backgroundColor: 'rgba(198, 120, 221, 0.10)',
+      textDecoration: '; font-weight: bold;',
       isWholeLine: true,
-      before: { contentText: '\u2503', color: '#C678DD', margin: '0 0.4em 0 0' },
     }),
 
     heading4: vscode.window.createTextEditorDecorationType({
-      fontWeight: 'bold',
-      backgroundColor: 'rgba(229, 192, 123, 0.10)',
+      textDecoration: '; font-weight: bold;',
       isWholeLine: true,
-      before: { contentText: '\u2503', color: '#E5C07B', margin: '0 0.4em 0 0' },
     }),
 
     heading5: vscode.window.createTextEditorDecorationType({
-      fontWeight: 'bold',
-      backgroundColor: 'rgba(86, 182, 194, 0.08)',
+      textDecoration: '; font-weight: bold;',
       isWholeLine: true,
-      before: { contentText: '\u2503', color: '#56B6C2', margin: '0 0.4em 0 0' },
     }),
 
     heading6: vscode.window.createTextEditorDecorationType({
-      fontWeight: 'bold',
-      backgroundColor: 'rgba(152, 195, 121, 0.08)',
+      textDecoration: '; font-weight: bold;',
       isWholeLine: true,
-      before: { contentText: '\u2503', color: '#98C379', margin: '0 0.4em 0 0' },
     }),
 
     headingText1: headingTextDecoration(1),
@@ -187,9 +179,14 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
       color: 'transparent',
       letterSpacing: '-0.55em; font-size: 0.001em',
       before: {
-        contentText: '\u2022',
+        contentText: '\u2022 ',
         color: 'rgba(180, 180, 180, 0.8)',
       },
+    }),
+
+    listNumber: vscode.window.createTextEditorDecorationType({
+      color: 'transparent',
+      letterSpacing: '-0.55em; font-size: 0.001em',
     }),
 
     horizontalRule: vscode.window.createTextEditorDecorationType({
@@ -197,7 +194,7 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
       letterSpacing: '-0.55em; font-size: 0.001em',
       isWholeLine: true,
       border: '1px solid rgba(128, 128, 128, 0.3)',
-      borderWidth: '0 0 1px 0',
+      borderWidth: '1px 0 0 0',
     }),
 
     codeBlock: vscode.window.createTextEditorDecorationType({
@@ -230,16 +227,7 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
 
     tableAlignmentRow: vscode.window.createTextEditorDecorationType({
       color: 'transparent',
-      isWholeLine: true,
-      textDecoration: 'line-through; text-decoration-color: rgba(128, 128, 128, 0.3)',
-      after: {
-        contentText: '\u2500',
-        color: 'rgba(128, 128, 128, 0)',
-      },
-      before: {
-        contentText: '\u2500',
-        color: 'rgba(128, 128, 128, 0)',
-      },
+      letterSpacing: '-0.55em; font-size: 0.001em',
     }),
 
     tableDataRowOdd: vscode.window.createTextEditorDecorationType({

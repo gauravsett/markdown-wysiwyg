@@ -36,19 +36,19 @@
           "minItems": 6,
           "maxItems": 6,
           "default": [
-            1.2,
-            1.1,
             1,
-            0.9,
-            0.8,
-            0.7
+            1,
+            1,
+            1,
+            1,
+            1
           ],
           "description": "Font size multipliers for H1–H6 relative to editor.fontSize (only used when scaleFontSize is true)"
         },
-        "markdown-wysiwyg.headings.colorize": {
-          "type": "boolean",
-          "default": true,
-          "description": "Apply distinct colors to different heading levels"
+        "markdown-wysiwyg.fontFamily": {
+          "type": "string",
+          "default": "system-ui, -apple-system, sans-serif",
+          "description": "Font family for prose content (headings, paragraphs, lists, blockquotes). Code blocks and inline code keep the editor's monospace font."
         },
         "markdown-wysiwyg.math.enable": {
           "type": "boolean",
@@ -58,60 +58,6 @@
       }
     },
     "colors": [
-      {
-        "id": "markdownWysiwyg.heading1",
-        "description": "Color for H1 headings",
-        "defaults": {
-          "dark": "#E06C75",
-          "light": "#C53030",
-          "highContrast": "#FF6B6B"
-        }
-      },
-      {
-        "id": "markdownWysiwyg.heading2",
-        "description": "Color for H2 headings",
-        "defaults": {
-          "dark": "#61AFEF",
-          "light": "#2B6CB0",
-          "highContrast": "#63B3ED"
-        }
-      },
-      {
-        "id": "markdownWysiwyg.heading3",
-        "description": "Color for H3 headings",
-        "defaults": {
-          "dark": "#C678DD",
-          "light": "#805AD5",
-          "highContrast": "#D6BCFA"
-        }
-      },
-      {
-        "id": "markdownWysiwyg.heading4",
-        "description": "Color for H4 headings",
-        "defaults": {
-          "dark": "#E5C07B",
-          "light": "#B7791F",
-          "highContrast": "#FAF089"
-        }
-      },
-      {
-        "id": "markdownWysiwyg.heading5",
-        "description": "Color for H5 headings",
-        "defaults": {
-          "dark": "#98C379",
-          "light": "#38A169",
-          "highContrast": "#9AE6B4"
-        }
-      },
-      {
-        "id": "markdownWysiwyg.heading6",
-        "description": "Color for H6 headings",
-        "defaults": {
-          "dark": "#56B6C2",
-          "light": "#319795",
-          "highContrast": "#76E4F7"
-        }
-      },
       {
         "id": "markdownWysiwyg.inlineCodeBackground",
         "description": "Background color for inline code",
