@@ -19,16 +19,20 @@ A VS Code extension that provides WYSIWYG-like markdown editing. Prose content r
 
 ## Installation
 
-The extension is not yet published on the VS Code Marketplace. To run it locally:
+The extension is not yet published on the VS Code Marketplace. To install locally:
 
 ```sh
 git clone https://github.com/gauravsett/markdown-wysiwyg.git
 cd markdown-wysiwyg
 npm install
 npm run compile
+npx @vscode/vsce package
+code --install-extension markdown-wysiwyg-0.1.0.vsix
 ```
 
-Then open the project in VS Code and press **F5** to launch an Extension Development Host with the extension active.
+The extension activates automatically on any markdown file.
+
+To develop and debug, open the project in VS Code and press **F5** to launch an Extension Development Host.
 
 ## Configuration
 
