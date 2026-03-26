@@ -59,7 +59,7 @@ export function parseDocument(document: vscode.TextDocument): DecorationRange[] 
   let inTable = false;
   let tableStartLine = -1;
   let tableDataRowIndex = 0;
-  const alignmentRowRegex = /^\|?(\s*:?-{1,}:?\s*\|)+\s*:?-{1,}:?\s*\|?\s*$/;
+  const alignmentRowRegex = /^\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)*\|?\s*$/;
 
   for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
     const line = lines[lineIdx];
@@ -353,9 +353,34 @@ function parseInlineFormatting(line: string, lineIdx: number, ranges: Decoration
     return matched.some(([s, e]) => start < e && end > s);
   }
 
+  // --- Inline code (`code`) — matched first since backtick content is literal ---
+  let match: RegExpExecArray | null;
+  const codeRegex = /(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)/g;
+
+  match = codeRegex.exec(line);
+  while (match !== null) {
+    const fullStart = match.index;
+    const backtickLen = match[1].length;
+    const contentStart = fullStart + backtickLen;
+    const contentEnd = contentStart + match[2].length;
+    const fullEnd = contentEnd + backtickLen;
+
+    if (!isAlreadyMatched(fullStart, fullEnd)) {
+      matched.push([fullStart, fullEnd]);
+      ranges.push({
+        type: 'inlineCode',
+        contentRange: new vscode.Range(lineIdx, contentStart, lineIdx, contentEnd),
+        syntaxRanges: [
+          new vscode.Range(lineIdx, fullStart, lineIdx, contentStart),
+          new vscode.Range(lineIdx, contentEnd, lineIdx, fullEnd),
+        ],
+      });
+    }
+    match = codeRegex.exec(line);
+  }
+
   // --- Bold + Italic (***text***, ___text___, **_text_**, __*text*__, _**text**_, *__text__*) ---
   const boldItalicRegex = /(\*{3}|_{3})(?!\s)(.+?)(?<!\s)\1/g;
-  let match: RegExpExecArray | null;
 
   match = boldItalicRegex.exec(line);
   while (match !== null) {
@@ -477,33 +502,8 @@ function parseInlineFormatting(line: string, lineIdx: number, ranges: Decoration
     match = strikeRegex.exec(line);
   }
 
-  // --- Inline code (`code`) ---
-  const codeRegex = /(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)/g;
-
-  match = codeRegex.exec(line);
-  while (match !== null) {
-    const fullStart = match.index;
-    const backtickLen = match[1].length;
-    const contentStart = fullStart + backtickLen;
-    const contentEnd = contentStart + match[2].length;
-    const fullEnd = contentEnd + backtickLen;
-
-    if (!isAlreadyMatched(fullStart, fullEnd)) {
-      matched.push([fullStart, fullEnd]);
-      ranges.push({
-        type: 'inlineCode',
-        contentRange: new vscode.Range(lineIdx, contentStart, lineIdx, contentEnd),
-        syntaxRanges: [
-          new vscode.Range(lineIdx, fullStart, lineIdx, contentStart),
-          new vscode.Range(lineIdx, contentEnd, lineIdx, fullEnd),
-        ],
-      });
-    }
-    match = codeRegex.exec(line);
-  }
-
   // --- Inline math ($...$) ---
-  const mathInlineRegex = /\$(?!\$)(?!\s)(.+?)(?<!\s)(?<!\$)\$/g;
+  const mathInlineRegex = /(?<!\$)\$(?!\$)(?!\s)(.+?)(?<!\s)(?<!\$)\$/g;
 
   match = mathInlineRegex.exec(line);
   while (match !== null) {
@@ -527,7 +527,7 @@ function parseInlineFormatting(line: string, lineIdx: number, ranges: Decoration
   }
 
   // --- Links [text](url) ---
-  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const linkRegex = /(?<!\\)\[([^\]]+)\]\(([^)]+)\)/g;
 
   match = linkRegex.exec(line);
   while (match !== null) {

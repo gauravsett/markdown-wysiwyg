@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { parseDocument, DecorationRange, DecorationRangeType, getLinesForRange } from './parser';
 import { DecorationTypes } from './styles';
 import { MathRenderer } from './mathRenderer';
+import { MUTED_COLOR, MUTED_COLOR_LIGHT, BULLET_COLOR } from './colors';
 
 function pushPipeOptions(
   syntaxRanges: vscode.Range[],
@@ -18,7 +19,7 @@ function pushPipeOptions(
       renderOptions: {
         before: {
           contentText: '\u2502',
-          color: 'rgba(128, 128, 128, 0.5)',
+          color: MUTED_COLOR,
           margin,
         },
       },
@@ -54,17 +55,14 @@ export class Decorator implements vscode.Disposable {
       }
     });
 
-    // Initial parse
     this.reparseAndApply();
   }
 
-  /** Update which lines are "active" (cursor on them) and re-apply decorations. */
   setActiveLines(lines: Set<number>): void {
     this.activeLines = lines;
     this.applyDecorations();
   }
 
-  /** Update the editor reference (e.g., when switching editors). */
   setEditor(editor: vscode.TextEditor): void {
     this.editor = editor;
     this.reparseAndApply();
@@ -86,8 +84,9 @@ export class Decorator implements vscode.Disposable {
 
   private applyDecorations(): void {
     const dt = this.dt;
+    const totalLines = this.editor.document.lineCount;
 
-    // Collect ranges for each decoration type
+    // Decoration collectors
     const hiddenSyntaxRanges: vscode.Range[] = [];
     const boldRanges: vscode.Range[] = [];
     const italicRanges: vscode.Range[] = [];
@@ -117,9 +116,19 @@ export class Decorator implements vscode.Disposable {
     const tablePipeOptions: vscode.DecorationOptions[] = [];
     const proseFontRanges: vscode.Range[] = [];
 
-    // Collect lines that should stay monospace (code blocks, tables)
+    // Single pass: collect monospace lines and monospace spans for prose font exclusion
     const monoLines = new Set<number>();
+    const monoSpansByLine = new Map<number, { start: number; end: number }[]>();
+
+    function addMonoSpan(line: number, start: number, end: number): void {
+      if (!monoSpansByLine.has(line)) {
+        monoSpansByLine.set(line, []);
+      }
+      monoSpansByLine.get(line)!.push({ start, end });
+    }
+
     for (const range of this.parsedRanges) {
+      // Whole-line monospace types (code blocks, tables)
       if (range.type === 'codeBlock' || range.type === 'tableHeader' ||
           range.type === 'tableAlignmentRow' || range.type === 'tableDataRowOdd' ||
           range.type === 'tableDataRowEven') {
@@ -127,11 +136,8 @@ export class Decorator implements vscode.Disposable {
           monoLines.add(line);
         }
       }
-    }
 
-    // Collect monospace spans per line (inline code, list number prefixes) to exclude from prose font
-    const monoSpansByLine = new Map<number, { start: number; end: number }[]>();
-    for (const range of this.parsedRanges) {
+      // Inline monospace spans excluded from prose font
       if (range.type === 'inlineCode') {
         const line = range.contentRange.start.line;
         const start = range.syntaxRanges.length > 0
@@ -140,42 +146,23 @@ export class Decorator implements vscode.Disposable {
         const end = range.syntaxRanges.length > 0
           ? range.syntaxRanges[range.syntaxRanges.length - 1].end.character
           : range.contentRange.end.character;
-        if (!monoSpansByLine.has(line)) {
-          monoSpansByLine.set(line, []);
-        }
-        monoSpansByLine.get(line)!.push({ start, end });
+        addMonoSpan(line, start, end);
       } else if (range.type === 'heading') {
-        // Exclude heading syntax (# markers) from proseFont — collapsed and re-rendered as pseudo-element
+        // Heading syntax (# markers) are collapsed — exclude from prose font
         const line = range.contentRange.start.line;
-        if (!monoSpansByLine.has(line)) {
-          monoSpansByLine.set(line, []);
-        }
         for (const sr of range.syntaxRanges) {
-          monoSpansByLine.get(line)!.push({ start: sr.start.character, end: sr.end.character });
+          addMonoSpan(line, sr.start.character, sr.end.character);
         }
       } else if (range.type === 'bold' || range.type === 'italic' || range.type === 'boldItalic') {
-        // Exclude formatted text from proseFont — prose variants handle font-family themselves
-        const line = range.contentRange.start.line;
-        if (!monoSpansByLine.has(line)) {
-          monoSpansByLine.set(line, []);
-        }
-        monoSpansByLine.get(line)!.push({
-          start: range.contentRange.start.character,
-          end: range.contentRange.end.character,
-        });
+        // Formatted text uses prose variants that handle font-family themselves
+        addMonoSpan(range.contentRange.start.line, range.contentRange.start.character, range.contentRange.end.character);
       } else if (range.type === 'listBullet' || range.type === 'listNumber') {
-        // Exclude the entire prefix (indentation + bullet/number) from prose font
-        // so the pseudo-element and indentation stay in monospace context
-        const line = range.contentRange.start.line;
-        if (!monoSpansByLine.has(line)) {
-          monoSpansByLine.set(line, []);
-        }
-        monoSpansByLine.get(line)!.push({ start: 0, end: range.contentRange.start.character });
+        // List prefix (indentation + bullet/number) stays monospace for alignment
+        addMonoSpan(range.contentRange.start.line, 0, range.contentRange.start.character);
       }
     }
 
-    // Apply prose font to non-monospace, non-active lines, excluding monospace spans
-    const totalLines = this.editor.document.lineCount;
+    // Build prose font ranges: non-monospace, non-active lines, excluding monospace spans
     for (let line = 0; line < totalLines; line++) {
       if (monoLines.has(line) || this.activeLines.has(line)) { continue; }
 
@@ -186,7 +173,6 @@ export class Decorator implements vscode.Disposable {
       if (!spans || spans.length === 0) {
         proseFontRanges.push(new vscode.Range(line, 0, line, lineLength));
       } else {
-        // Sort spans by start position
         const sorted = spans.sort((a, b) => a.start - b.start);
         let cursor = 0;
         for (const span of sorted) {
@@ -201,11 +187,11 @@ export class Decorator implements vscode.Disposable {
       }
     }
 
+    // Main pass: build decoration ranges
     for (const range of this.parsedRanges) {
       const lines = getLinesForRange(range);
       const isOnActiveLine = lines.some((l) => this.activeLines.has(l));
 
-      // Always apply content styling
       switch (range.type) {
         case 'bold': {
           const onProseLine = !isOnActiveLine && !monoLines.has(range.contentRange.start.line);
@@ -224,22 +210,18 @@ export class Decorator implements vscode.Disposable {
         }
         case 'heading': {
           const level = Math.min(Math.max((range.level ?? 1) - 1, 0), 5);
-          // Always anchor at column 0 so the `before` bar appears at the left
-          // edge of the line. isWholeLine:true covers the full line background
-          // regardless of range width.
           const lineNum = range.contentRange.start.line;
           headingRanges[level].push(new vscode.Range(lineNum, 0, lineNum, 0));
-          // Apply font-size scaling and syntax styling only on inactive lines
           if (!isOnActiveLine) {
             headingTextRanges[level].push(range.contentRange);
             for (const sr of range.syntaxRanges) {
-              const syntaxText = this.editor.document.getText(sr);
               headingSyntaxOptions.push({
                 range: sr,
                 renderOptions: {
                   before: {
-                    contentText: syntaxText,
-                    color: 'rgba(128, 128, 128, 0.5)',
+                    contentText: this.editor.document.getText(sr),
+                    color: MUTED_COLOR,
+                    fontWeight: 'normal',
                   },
                 },
               });
@@ -249,7 +231,6 @@ export class Decorator implements vscode.Disposable {
         }
         case 'inlineCode':
           if (isOnActiveLine) {
-            // On cursor line: style the full range (including backticks)
             const fullRange = new vscode.Range(
               range.syntaxRanges[0].start,
               range.syntaxRanges[range.syntaxRanges.length - 1].end,
@@ -286,7 +267,7 @@ export class Decorator implements vscode.Disposable {
               renderOptions: {
                 before: {
                   contentText: numberOnly + '. ',
-                  color: 'rgba(180, 180, 180, 0.8)',
+                  color: BULLET_COLOR,
                 },
               },
             });
@@ -298,7 +279,6 @@ export class Decorator implements vscode.Disposable {
           }
           break;
         case 'codeBlock':
-          // Apply background to all content lines
           for (let line = range.contentRange.start.line; line <= range.contentRange.end.line; line++) {
             const isFenceLine = range.syntaxRanges.some((sr) => sr.start.line === line);
             if (isFenceLine && !isOnActiveLine) {
@@ -348,8 +328,8 @@ export class Decorator implements vscode.Disposable {
               range: range.contentRange,
               renderOptions: width > 0 ? {
                 before: {
-                  contentText: '—'.repeat(width),
-                  color: 'rgba(128, 128, 128, 0.3)',
+                  contentText: '\u2014'.repeat(width),
+                  color: MUTED_COLOR_LIGHT,
                 },
               } : undefined,
             });
@@ -369,7 +349,7 @@ export class Decorator implements vscode.Disposable {
           break;
       }
 
-      // Only hide syntax markers on inactive lines
+      // Hide syntax markers on inactive lines (unless type handles its own hiding)
       if (!isOnActiveLine) {
         for (const syntaxRange of range.syntaxRanges) {
           if (!SELF_HIDDEN_TYPES.has(range.type)) {
@@ -389,18 +369,10 @@ export class Decorator implements vscode.Disposable {
     this.editor.setDecorations(dt.proseItalic, proseItalicRanges);
     this.editor.setDecorations(dt.proseBoldItalic, proseBoldItalicRanges);
     this.editor.setDecorations(dt.headingSyntax, headingSyntaxOptions);
-    this.editor.setDecorations(dt.heading1, headingRanges[0]);
-    this.editor.setDecorations(dt.heading2, headingRanges[1]);
-    this.editor.setDecorations(dt.heading3, headingRanges[2]);
-    this.editor.setDecorations(dt.heading4, headingRanges[3]);
-    this.editor.setDecorations(dt.heading5, headingRanges[4]);
-    this.editor.setDecorations(dt.heading6, headingRanges[5]);
-    this.editor.setDecorations(dt.headingText1, headingTextRanges[0]);
-    this.editor.setDecorations(dt.headingText2, headingTextRanges[1]);
-    this.editor.setDecorations(dt.headingText3, headingTextRanges[2]);
-    this.editor.setDecorations(dt.headingText4, headingTextRanges[3]);
-    this.editor.setDecorations(dt.headingText5, headingTextRanges[4]);
-    this.editor.setDecorations(dt.headingText6, headingTextRanges[5]);
+    for (let i = 0; i < 6; i++) {
+      this.editor.setDecorations(dt.headings[i], headingRanges[i]);
+      this.editor.setDecorations(dt.headingTexts[i], headingTextRanges[i]);
+    }
     this.editor.setDecorations(dt.inlineCode, inlineCodeRanges);
     this.editor.setDecorations(dt.strikethrough, strikethroughRanges);
     this.editor.setDecorations(dt.linkText, linkTextRanges);
@@ -420,15 +392,12 @@ export class Decorator implements vscode.Disposable {
     this.editor.setDecorations(dt.tablePipe, tablePipeOptions);
   }
 
-  /** Clear all decorations from the editor. */
   clearAll(): void {
     const dt = this.dt;
     const allTypes = [
       dt.hiddenSyntax, dt.proseFont, dt.bold, dt.italic, dt.boldItalic,
       dt.proseBold, dt.proseItalic, dt.proseBoldItalic,
-      dt.headingSyntax,
-      dt.heading1, dt.heading2, dt.heading3, dt.heading4, dt.heading5, dt.heading6,
-      dt.headingText1, dt.headingText2, dt.headingText3, dt.headingText4, dt.headingText5, dt.headingText6,
+      dt.headingSyntax, ...dt.headings, ...dt.headingTexts,
       dt.inlineCode, dt.strikethrough, dt.linkText,
       dt.blockquoteContent, dt.blockquoteMarker, dt.listBullet, dt.listNumber,
       dt.horizontalRule, dt.codeBlock, dt.codeBlockFence,

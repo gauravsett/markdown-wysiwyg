@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { MUTED_COLOR, MUTED_COLOR_LIGHT, SUBTLE_BG, BULLET_COLOR, INLINE_CODE_BG, INLINE_CODE_BORDER, MATH_BG } from './colors';
 
 export interface DecorationTypes {
   hiddenSyntax: vscode.TextEditorDecorationType;
@@ -13,18 +14,8 @@ export interface DecorationTypes {
   inlineCode: vscode.TextEditorDecorationType;
   linkText: vscode.TextEditorDecorationType;
   headingSyntax: vscode.TextEditorDecorationType;
-  heading1: vscode.TextEditorDecorationType;
-  heading2: vscode.TextEditorDecorationType;
-  heading3: vscode.TextEditorDecorationType;
-  heading4: vscode.TextEditorDecorationType;
-  heading5: vscode.TextEditorDecorationType;
-  heading6: vscode.TextEditorDecorationType;
-  headingText1: vscode.TextEditorDecorationType;
-  headingText2: vscode.TextEditorDecorationType;
-  headingText3: vscode.TextEditorDecorationType;
-  headingText4: vscode.TextEditorDecorationType;
-  headingText5: vscode.TextEditorDecorationType;
-  headingText6: vscode.TextEditorDecorationType;
+  headings: vscode.TextEditorDecorationType[];
+  headingTexts: vscode.TextEditorDecorationType[];
   blockquoteContent: vscode.TextEditorDecorationType;
   blockquoteMarker: vscode.TextEditorDecorationType;
   listBullet: vscode.TextEditorDecorationType;
@@ -45,6 +36,13 @@ export interface HeadingStyleOptions {
   scaleFontSize?: boolean;
   fontSizeMultipliers: number[];
 }
+
+// Shared CSS for collapsing text to near-zero width while preserving cursor navigation
+const HIDDEN_TEXT_CSS = {
+  color: 'transparent' as const,
+  letterSpacing: '-0.55em; font-size: 0.001em',
+};
+
 
 function createNoOpDecorationType(): vscode.TextEditorDecorationType {
   return vscode.window.createTextEditorDecorationType({});
@@ -69,11 +67,11 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
     });
   }
 
+  // All heading levels share the same whole-line bold decoration
+  const headingBase = { textDecoration: '; font-weight: bold;', isWholeLine: true };
+
   return {
-    hiddenSyntax: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
-    }),
+    hiddenSyntax: vscode.window.createTextEditorDecorationType({ ...HIDDEN_TEXT_CSS }),
 
     proseFont: vscode.window.createTextEditorDecorationType({
       textDecoration: `; font-family: ${proseFontFamily};`,
@@ -109,8 +107,8 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
     }),
 
     inlineCode: vscode.window.createTextEditorDecorationType({
-      backgroundColor: 'rgba(128, 128, 128, 0.15)',
-      border: '1px solid rgba(128, 128, 128, 0.1)',
+      backgroundColor: INLINE_CODE_BG,
+      border: `1px solid ${INLINE_CODE_BORDER}`,
       borderRadius: '3px',
     }),
 
@@ -118,47 +116,13 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
       textDecoration: 'underline',
     }),
 
-    headingSyntax: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
-    }),
+    headingSyntax: vscode.window.createTextEditorDecorationType({ ...HIDDEN_TEXT_CSS }),
 
-    heading1: vscode.window.createTextEditorDecorationType({
-      textDecoration: '; font-weight: bold;',
-      isWholeLine: true,
-    }),
+    headings: Array.from({ length: 6 }, () =>
+      vscode.window.createTextEditorDecorationType(headingBase),
+    ),
 
-    heading2: vscode.window.createTextEditorDecorationType({
-      textDecoration: '; font-weight: bold;',
-      isWholeLine: true,
-    }),
-
-    heading3: vscode.window.createTextEditorDecorationType({
-      textDecoration: '; font-weight: bold;',
-      isWholeLine: true,
-    }),
-
-    heading4: vscode.window.createTextEditorDecorationType({
-      textDecoration: '; font-weight: bold;',
-      isWholeLine: true,
-    }),
-
-    heading5: vscode.window.createTextEditorDecorationType({
-      textDecoration: '; font-weight: bold;',
-      isWholeLine: true,
-    }),
-
-    heading6: vscode.window.createTextEditorDecorationType({
-      textDecoration: '; font-weight: bold;',
-      isWholeLine: true,
-    }),
-
-    headingText1: headingTextDecoration(1),
-    headingText2: headingTextDecoration(2),
-    headingText3: headingTextDecoration(3),
-    headingText4: headingTextDecoration(4),
-    headingText5: headingTextDecoration(5),
-    headingText6: headingTextDecoration(6),
+    headingTexts: Array.from({ length: 6 }, (_, i) => headingTextDecoration(i + 1)),
 
     blockquoteContent: vscode.window.createTextEditorDecorationType({
       fontStyle: 'italic',
@@ -166,58 +130,48 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
     }),
 
     blockquoteMarker: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
+      ...HIDDEN_TEXT_CSS,
       before: {
-        contentText: '\u2503',
-        color: 'rgba(128, 128, 128, 0.5)',
+        contentText: '\u2502',
+        color: MUTED_COLOR,
         margin: '0 0.3em 0 0',
       },
     }),
 
     listBullet: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
+      ...HIDDEN_TEXT_CSS,
       before: {
         contentText: '\u2022 ',
-        color: 'rgba(180, 180, 180, 0.8)',
+        color: BULLET_COLOR,
       },
     }),
 
-    listNumber: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
-    }),
+    listNumber: vscode.window.createTextEditorDecorationType({ ...HIDDEN_TEXT_CSS }),
 
     horizontalRule: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
+      ...HIDDEN_TEXT_CSS,
       isWholeLine: true,
-      border: '1px solid rgba(128, 128, 128, 0.3)',
+      border: `1px solid ${MUTED_COLOR_LIGHT}`,
       borderWidth: '1px 0 0 0',
     }),
 
     codeBlock: vscode.window.createTextEditorDecorationType({
-      backgroundColor: 'rgba(128, 128, 128, 0.08)',
+      backgroundColor: SUBTLE_BG,
       isWholeLine: true,
     }),
 
     codeBlockFence: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
+      ...HIDDEN_TEXT_CSS,
       isWholeLine: true,
-      backgroundColor: 'rgba(128, 128, 128, 0.08)',
+      backgroundColor: SUBTLE_BG,
     }),
 
     mathInline: vscode.window.createTextEditorDecorationType({
-      backgroundColor: 'rgba(255, 200, 124, 0.1)',
+      backgroundColor: MATH_BG,
       borderRadius: '3px',
     }),
 
-    mathInlineHidden: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
-    }),
+    mathInlineHidden: vscode.window.createTextEditorDecorationType({ ...HIDDEN_TEXT_CSS }),
 
     tableHeader: vscode.window.createTextEditorDecorationType({
       fontWeight: 'bold',
@@ -225,10 +179,7 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
       isWholeLine: true,
     }),
 
-    tableAlignmentRow: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
-    }),
+    tableAlignmentRow: vscode.window.createTextEditorDecorationType({ ...HIDDEN_TEXT_CSS }),
 
     tableDataRowOdd: vscode.window.createTextEditorDecorationType({
       isWholeLine: true,
@@ -238,9 +189,6 @@ export function createDecorationTypes(options: HeadingStyleOptions): DecorationT
       isWholeLine: true,
     }),
 
-    tablePipe: vscode.window.createTextEditorDecorationType({
-      color: 'transparent',
-      letterSpacing: '-0.55em; font-size: 0.001em',
-    }),
+    tablePipe: vscode.window.createTextEditorDecorationType({ ...HIDDEN_TEXT_CSS }),
   };
 }

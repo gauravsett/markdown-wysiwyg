@@ -123,8 +123,12 @@ function disposeDecorator(): void {
 
 function disposeDecorationTypes(): void {
   if (decorationTypes) {
-    for (const dt of Object.values(decorationTypes) as vscode.TextEditorDecorationType[]) {
-      dt.dispose();
+    for (const val of Object.values(decorationTypes)) {
+      if (Array.isArray(val)) {
+        for (const dt of val) { dt.dispose(); }
+      } else {
+        (val as vscode.TextEditorDecorationType).dispose();
+      }
     }
     decorationTypes = undefined;
   }

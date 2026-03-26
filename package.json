@@ -4,11 +4,27 @@
   "description": "WYSIWYG-like markdown editing using decorations — hides syntax on inactive lines, reveals on cursor line",
   "version": "0.1.0",
   "publisher": "gauravsett",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gauravsett/markdown-wysiwyg.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gauravsett/markdown-wysiwyg/issues"
+  },
+  "icon": "icon.png",
+  "keywords": [
+    "markdown",
+    "wysiwyg",
+    "formatting",
+    "editor",
+    "preview"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Other"
+    "Formatters"
   ],
   "activationEvents": [
     "onLanguage:markdown"
@@ -115,14 +131,18 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "vscode:prepublish": "node esbuild.mjs --production",
+    "compile": "node esbuild.mjs",
+    "compile:check": "tsc -p ./ --noEmit",
+    "watch": "tsc -watch -p ./",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
-    "typescript": "^5.3.3"
+    "esbuild": "^0.27.4",
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.1"
   },
   "dependencies": {
     "mathjax-full": "^3.2.1"
