@@ -6,7 +6,7 @@ await esbuild.build({
   entryPoints: ['src/extension.ts'],
   bundle: true,
   outfile: 'out/extension.js',
-  external: ['vscode'],
+  external: ['vscode', 'mathjax-full'],
   format: 'cjs',
   platform: 'node',
   target: 'es2022',

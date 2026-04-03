@@ -1,7 +1,7 @@
 # Markdown WYSIWYG Test Document
 
 This file exercises every markdown construct supported by the extension.
-Use it to verify that syntax hiding and revealing works correctly.
+Use it to verify that the syntax hiding and revealing works correctly.
 
 ## Headings
 
@@ -47,7 +47,7 @@ Here is a [link with a longer URL](https://example.com/path/to/page?query=value&
 
 ### Ordered lists
 
-1. First numbered item
+1. First numbered item in the list
   1. Nested numbered item
 2. Second numbered item
 

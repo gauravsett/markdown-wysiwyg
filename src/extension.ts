@@ -155,7 +155,9 @@ function readHeadingOptions(config: vscode.WorkspaceConfiguration): HeadingStyle
 }
 
 function isMarkdown(document: vscode.TextDocument): boolean {
-  return document.languageId === 'markdown';
+  if (document.languageId === 'markdown') { return true; }
+  const name = document.fileName.toLowerCase();
+  return name.endsWith('.md') || name.endsWith('.markdown');
 }
 
 export function deactivate(): void {

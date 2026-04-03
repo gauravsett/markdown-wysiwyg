@@ -4,6 +4,7 @@
 .claude
 src/
 node_modules/
+!node_modules/mathjax-full/
 *.vsix
 test.md
 CLAUDE.md

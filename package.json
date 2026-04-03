@@ -26,8 +26,10 @@
   "categories": [
     "Formatters"
   ],
+  "extensionKind": ["ui", "workspace"],
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onGlob:**/*.md"
   ],
   "main": "./out/extension.js",
   "contributes": {

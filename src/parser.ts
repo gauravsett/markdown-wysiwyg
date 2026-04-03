@@ -53,6 +53,17 @@ export function parseDocument(document: vscode.TextDocument): DecorationRange[] 
   const text = document.getText();
   const lines = text.split('\n');
 
+  // Skip YAML frontmatter (--- delimited block at start of document)
+  let firstContentLine = 0;
+  if (lines.length > 0 && lines[0].trim() === '---') {
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim() === '---') {
+        firstContentLine = i + 1;
+        break;
+      }
+    }
+  }
+
   let inCodeBlock = false;
   let codeBlockStartLine = -1;
 
@@ -61,7 +72,7 @@ export function parseDocument(document: vscode.TextDocument): DecorationRange[] 
   let tableDataRowIndex = 0;
   const alignmentRowRegex = /^\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)*\|?\s*$/;
 
-  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+  for (let lineIdx = firstContentLine; lineIdx < lines.length; lineIdx++) {
     const line = lines[lineIdx];
 
     // --- Code blocks (fenced with ```) ---
